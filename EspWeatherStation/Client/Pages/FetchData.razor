@@ -1,0 +1,205 @@
+﻿@page "/fetchdata"
+@using EspWeatherStation.Shared
+@using System.Globalization
+@inject HttpClient Http
+
+<PageTitle>ESP Weather Station</PageTitle>
+
+<div class="ws-header">
+    <img src="images/weather-icon.png" alt="logo" style="width:46px;height:46px;border-radius:6px;background:linear-gradient(135deg,#6dd5ed,#2193b0);padding:6px" />
+    <div>
+        <div class="ws-title">ESP WEATHER STATION</div>
+        <div style="font-size:13px;color:#666;margin-top:6px">Remote sensor readings dashboard</div>
+    </div>
+
+    <div style="flex:1"></div>
+
+    <div class="controls">
+        <label class="sr-only" for="count">Number of readings</label>
+        <input id="count" type="number" min="1" max="500" style="width:140px" @bind="readingsCount" />
+        <button class="btn btn-outline-primary" @onclick="LoadDataAsync">UPDATE</button>
+    </div>
+</div>
+
+<div class="last-reading">
+    Last reading: @LastReadingTimeText
+</div>
+
+<div class="gauges">
+    <div class="gauge-card">
+        <div class="gauge-label">TEMPERATURE</div>
+        <div class="gauge" aria-hidden="true">
+            <div class="gauge-fill" style="@TemperatureGaugeCss"></div>
+        </div>
+        <div class="gauge-value">@TempDisplay</div>
+
+        <div class="stats-row">
+            <div class="stat">
+                <div>Min</div>
+                <div class="num">@FormatNullable(TempMin, "°C")</div>
+            </div>
+            <div class="stat">
+                <div>Max</div>
+                <div class="num">@FormatNullable(TempMax, "°C")</div>
+            </div>
+            <div class="stat">
+                <div>Average</div>
+                <div class="num">@FormatNullable(TempAvg, "°C")</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="gauge-card">
+        <div class="gauge-label">HUMIDITY</div>
+        <div class="gauge" aria-hidden="true">
+            <div class="gauge-fill" style="@HumidityGaugeCss"></div>
+        </div>
+        <div class="gauge-value">@HumDisplay</div>
+
+        <div class="stats-row">
+            <div class="stat">
+                <div>Min</div>
+                <div class="num">@FormatNullable(HumMin, "%")</div>
+            </div>
+            <div class="stat">
+                <div>Max</div>
+                <div class="num">@FormatNullable(HumMax, "%")</div>
+            </div>
+            <div class="stat">
+                <div>Average</div>
+                <div class="num">@FormatNullable(HumAvg, "%")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="readings-title">View Latest @readingsCount Readings</div>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!forecasts.Any())
+{
+    <p>No readings available.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Sensor</th>
+                    <th>Location</th>
+                    <th>Value 1</th>
+                    <th>Value 2</th>
+                    <th>Value 3</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var weatherStation in weatherStations)
+                {
+                    <tr>
+                        <td>@weatherStation.Id</td>
+                        <td>@weatherStation.Sensor</td>
+                        <td>@weatherStation.Location</td>
+                        <td>@weatherStation.Value1</td>
+                        <td>@weatherStation.Value2</td>
+                        <td>@weatherStation.Value3</td>
+                        <td>@weatherStation.ReadingTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    // NOTE: Assumption: Value1 stores temperature (°C) and Value2 stores humidity (%).
+    // If your sensor uses different fields, adjust parsing logic accordingly.
+
+    private WeatherStation[]? forecasts;
+    private IEnumerable<WeatherStation> weatherStations = Enumerable.Empty<WeatherStation>();
+    private int readingsCount = 20;
+
+    // computed gauge/stat values
+    private double? TempMin, TempMax, TempAvg;
+    private double? HumMin, HumMax, HumAvg;
+    private double? TempLatest, HumLatest;
+
+    private string TemperatureGaugeCss => GaugeCss(TempLatest, "#2ecc71"); // green
+    private string HumidityGaugeCss => GaugeCss(HumLatest, "#3498db"); // blue
+
+    private string TempDisplay => TempLatest.HasValue ? $"{TempLatest.Value:F1} °C" : "--";
+    private string HumDisplay => HumLatest.HasValue ? $"{HumLatest.Value:F0} %" : "--";
+
+    private string LastReadingTimeText =>
+      forecasts != null && forecasts.Any()
+        ? forecasts.OrderByDescending(f => f.ReadingTime).First().ReadingTime.ToString("yyyy-MM-dd HH:mm:ss")
+        : "--";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        forecasts = await Http.GetFromJsonAsync<WeatherStation[]>("api/WeatherStation");
+        if (forecasts == null) forecasts = Array.Empty<WeatherStation>();
+
+        // order by timestamp desc and take N
+        weatherStations = forecasts.OrderByDescending(f => f.ReadingTime).Take(readingsCount).ToArray();
+
+        ComputeStats();
+        StateHasChanged();
+    }
+
+    private void ComputeStats()
+    {
+        var tempVals = weatherStations.Select(w => ParseNullable(w.Value1)).Where(v => v.HasValue).Select(v => v!.Value).ToArray();
+        var humVals = weatherStations.Select(w => ParseNullable(w.Value2)).Where(v => v.HasValue).Select(v => v!.Value).ToArray();
+
+        TempMin = tempVals.Any() ? tempVals.Min() : (double?)null;
+        TempMax = tempVals.Any() ? tempVals.Max() : (double?)null;
+        TempAvg = tempVals.Any() ? tempVals.Average() : (double?)null;
+        TempLatest = weatherStations.OrderByDescending(d => d.ReadingTime).Select(d => ParseNullable(d.Value1)).FirstOrDefault() ?? null;
+
+        HumMin = humVals.Any() ? humVals.Min() : (double?)null;
+        HumMax = humVals.Any() ? humVals.Max() : (double?)null;
+        HumAvg = humVals.Any() ? humVals.Average() : (double?)null;
+        HumLatest = weatherStations.OrderByDescending(d => d.ReadingTime).Select(d => ParseNullable(d.Value2)).FirstOrDefault() ?? null;
+    }
+
+    private static double? ParseNullable(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return null;
+        if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        // try replacing comma with dot
+        var alt = s.Replace(',', '.');
+        if (double.TryParse(alt, NumberStyles.Any, CultureInfo.InvariantCulture, out v)) return v;
+        return null;
+    }
+
+    private static string FormatNullable(double? v, string unit)
+    {
+        return v.HasValue ? $"{v.Value:F1} {unit}" : "--";
+    }
+
+    // Build CSS gradient for the semicircle gauge.
+    // percentage value should map roughly: 0% -> empty, 100% -> full semicircle (180deg).
+    private string GaugeCss(double? value, string color)
+    {
+        if (!value.HasValue) return "background:#e9ecef;";
+        // We need a fraction 0..1 to represent value. For values outside expected range clamp.
+        // For temperature we expect -10..50 => map to 0..100 (optional). Here we assume max expected is 100 for simplicity.
+        // To keep it generic, map using a simple clamp between 0 and 100.
+        var val = Math.Clamp(value.Value, 0, 100);
+        var deg = val * 1.8; // 100 -> 180deg
+                             // generate conic gradient centered so the semicircle shows start at left.
+                             // top half of the small circle is visible; use color for filled arc and remaining gray.
+        return $"background: conic-gradient({color} {deg}deg, #e9ecef {deg}deg);";
+    }
+}

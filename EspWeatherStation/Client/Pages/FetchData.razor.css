@@ -1,0 +1,121 @@
+﻿.ws-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f5f7fa;
+    padding: 18px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    margin-bottom: 28px;
+}
+
+.ws-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: .6px;
+}
+
+.controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.last-reading {
+    color: #555;
+    margin: 12px 0 28px;
+    text-align: center;
+}
+
+.gauges {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.gauge-card {
+    width: 320px;
+    text-align: center;
+}
+
+.gauge-label {
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.gauge {
+    width: 180px;
+    height: 90px; /* half circle */
+    margin: 0 auto;
+    border-radius: 180px 180px 0 0;
+    background: #e9ecef;
+    position: relative;
+    overflow: hidden;
+}
+
+.gauge-fill {
+    width: 360px;
+    height: 360px; /* big circle, centered to show semicircle */
+    border-radius: 50%;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%) translateY(60%);
+    top: -150px;
+}
+
+.gauge-value {
+    margin-top: 14px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 18px;
+    font-size: 14px;
+    color: #333;
+}
+
+.stat {
+    text-align: center;
+    flex: 1;
+}
+
+    .stat .num {
+        font-weight: 700;
+        margin-top: 6px;
+        display: block;
+    }
+
+.readings-title {
+    text-align: center;
+    font-size: 26px;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.table thead th {
+    background: #2f4866;
+    color: #fff;
+    border: none;
+}
+
+.table tbody td {
+    vertical-align: middle;
+}
+
+/* Responsive */
+@media (max-width:720px) {
+    .gauges {
+        gap: 20px;
+    }
+
+    .gauge-card {
+        width: 100%;
+    }
+}

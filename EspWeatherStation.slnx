@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="EspWeatherStation/Client/EspWeatherStation.Client.csproj" />
+  <Project Path="EspWeatherStation/Server/EspWeatherStation.Server.csproj" />
+  <Project Path="EspWeatherStation/Shared/EspWeatherStation.Shared.csproj" />
+</Solution>
