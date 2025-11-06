@@ -147,7 +147,7 @@ else
 
     private async Task LoadDataAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherStation[]>("api/WeatherStation");
+        forecasts = await Http.GetFromJsonAsync<WeatherStation[]>("api/WeatherStations");
         if (forecasts == null) forecasts = Array.Empty<WeatherStation>();
 
         // order by timestamp desc and take N

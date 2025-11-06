@@ -10,7 +10,6 @@ GET {{EspWeatherStation.Server_HostAddress}}/api/weatherstation
 
 POST {{EspWeatherStation.Server_HostAddress}}/api/weatherstations
 Content-Type: application/json
-"weatherStation": [
 {
   "sensor": "Sensor123",
   "location": "Rooftop",
@@ -18,10 +17,18 @@ Content-Type: application/json
   "value2": 21.1,
   "value3": 25.5,
 }
-    ]
 
 ###
 
 GET {{EspWeatherStation.Server_HostAddress}}/api/weatherstations
+
+###
+
+POST {{EspWeatherStation.Server_HostAddress}}/api/weatherstations
+Content-Type: application/json
+
+{
+  //WeatherStation
+}
 
 ###
