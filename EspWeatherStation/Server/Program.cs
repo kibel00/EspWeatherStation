@@ -1,4 +1,7 @@
-using Microsoft.AspNetCore.ResponseCompression;
+﻿using EspWeatherStation.Server.Data;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +9,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddDbContext<EspWeatherStationServerContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("EspWeatherStationServerContext") ?? throw new InvalidOperationException("Connection string 'EspWeatherStationServerContext' not found.")));
+
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+    options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+    options.SerializerSettings.Formatting = Formatting.Indented;
+    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+});
 
 var app = builder.Build();
 

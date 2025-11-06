@@ -1,0 +1,27 @@
+﻿@EspWeatherStation.Server_HostAddress = https://localhost:7231
+
+GET {{EspWeatherStation.Server_HostAddress}}/api/weatherstation
+
+###
+
+GET {{EspWeatherStation.Server_HostAddress}}/api/weatherstation
+
+###
+
+POST {{EspWeatherStation.Server_HostAddress}}/api/weatherstations
+Content-Type: application/json
+"weatherStation": [
+{
+  "sensor": "Sensor123",
+  "location": "Rooftop",
+  "value1": 28.8,
+  "value2": 21.1,
+  "value3": 25.5,
+}
+    ]
+
+###
+
+GET {{EspWeatherStation.Server_HostAddress}}/api/weatherstations
+
+###
